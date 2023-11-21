@@ -25,8 +25,15 @@ SECRET_KEY = 'django-insecure-@sjbi4de9)ku!7rqr&lt-*58=8g(z*66j7v*yn_d_mr0i@kyl9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "192.168.111.109", "rcpss-sutech.ir"]
 
+CORS_ALLOW_ALL_ORIGINS = True
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # My Next.js app URL
+# ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
@@ -38,10 +45,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'power_dashboard',
-    'rest_framework'
+    'rest_framework',
+    'django_filters',
+    'corsheaders',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+}
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -107,7 +123,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
+USE_TZ = True
 
 USE_I18N = True
 
