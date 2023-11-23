@@ -61,7 +61,7 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
     permission_classes = ()
     http_method_names = ['get', ]
 
-    @action(detail=False, methods=["get"], url_path=r'add-data',)
+    @action(detail=False, methods=["get"], url_path=r'add',)
     def add_data(self, request):
         print("ADD_DATA called!")
         current = request.GET.get('current')
