@@ -12,7 +12,8 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
         model = Group
         fields = ['url', 'name']
     
-class PowerMeterSerializer(serializers.HyperlinkedModelSerializer):
+class PowerMeterSerializer(serializers.ModelSerializer):
     class Meta:
         model = PowerMeter
-        fields = ['current', 'datetime',]
+        fields = "__all__"
+

@@ -12,7 +12,7 @@ class PowerMeterDateFilter(django_filters.FilterSet):
     def filter_by_date(self, queryset, name, value):
         today = timezone.now().date()
         if value == 'today':
-            print("?date=today called!")
+            # print("?date=today called!")
             return queryset.filter(datetime__date=today)
         elif value == 'yesterday':
             yesterday = today - timezone.timedelta(days=1)
