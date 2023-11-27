@@ -15,9 +15,11 @@ class PowerMeterDateFilter(django_filters.FilterSet):
         field_name='datetime', method='filter_by_date', label="Dates to be filtered")
 
     def filter_by_date(self, queryset, name, value):
-        today = timezone.now().date()
+        today = timezone.localdate()
+        
         if value == 'today':
-            return queryset.filter(datetime__date__gte=today, datetime__date__lte=today).order_by('datetime')
+            print("Now is: " + str(timezone.localdate()))
+            return queryset.filter(datetime__date=today).order_by('datetime')
         elif value == 'yesterday':
             yesterday = today - timezone.timedelta(days=1)
             return queryset.filter(datetime__date__gte=yesterday, datetime__date__lte=today).order_by('datetime')
@@ -46,7 +48,7 @@ class MinMaxPowerDateFilter(django_filters.FilterSet):
         field_name='datetime', method='filter_by_date', label="Dates to be filtered")
 
     def filter_by_date(self, queryset, name, value):
-        today = timezone.now().date()
+        today = timezone.localdate()
         if value == 'last7days':
             seven_days_ago = today - timezone.timedelta(days=7)
             return queryset.filter(datetime__date__gte=seven_days_ago, datetime__date__lte=today).values(date=TruncDate('datetime')).annotate(
