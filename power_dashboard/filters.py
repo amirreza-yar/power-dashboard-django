@@ -18,11 +18,11 @@ class PowerMeterDateFilter(django_filters.FilterSet):
         today = timezone.localdate()
         
         if value == 'today':
-            print("Now is: " + str(timezone.localdate()))
+            print("Now is: " + str(today - timezone.timedelta(days=1)))
             return queryset.filter(datetime__date=today).order_by('datetime')
         elif value == 'yesterday':
             yesterday = today - timezone.timedelta(days=1)
-            return queryset.filter(datetime__date__gte=yesterday, datetime__date__lte=today).order_by('datetime')
+            return queryset.filter(datetime__date=yesterday).order_by('datetime')
         elif value == 'last7days':
             seven_days_ago = today - timezone.timedelta(days=7)
             return queryset.filter(datetime__date__gte=seven_days_ago, datetime__date__lte=today).order_by('datetime')
