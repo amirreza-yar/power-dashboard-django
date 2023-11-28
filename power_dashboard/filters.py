@@ -67,9 +67,9 @@ class MinMaxPowerDateFilter(django_filters.FilterSet):
             )
 
         # TODO This doesnt work correctly! The problem is date.
-        elif value == 'thismonth':
+        elif value == 'last30days':
             thirty_days_ago = today - timezone.timedelta(days=30)
-            return queryset.filter(datetime__date__gte=thirty_days_ago, datetime__date__lte=today).order_by('datetime').values(date=TruncDate('datetime')).annotate(
+            return queryset.filter(datetime__date__gte=thirty_days_ago, datetime__date__lte=today).values(date=TruncDate('datetime')).annotate(
                 min_power=Min(ExpressionWrapper(
                     F('current') * 220 * 0.9, output_field=FloatField())),
                 max_power=Max(ExpressionWrapper(
@@ -130,9 +130,9 @@ class AvgPowerDateFilter(django_filters.FilterSet):
             )
 
         # TODO This doesnt work correctly! The problem is date.
-        elif value == 'thismonth':
+        elif value == 'last30days':
             thirty_days_ago = today - timezone.timedelta(days=30)
-            return queryset.filter(datetime__date__gte=thirty_days_ago, datetime__date__lte=today).order_by('datetime').values(date=TruncDate('datetime')).annotate(
+            return queryset.filter(datetime__date__gte=thirty_days_ago, datetime__date__lte=today).values(date=TruncDate('datetime')).annotate(
                 avg_power=Avg(ExpressionWrapper(
                     F('current') * 220 * 0.9, output_field=FloatField())),
             )
