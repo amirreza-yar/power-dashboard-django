@@ -29,3 +29,11 @@ class MinMaxPowerSerializer(serializers.ModelSerializer):
     class Meta:
         model = PowerMeter
         fields = ['power', 'date', 'min_power', 'max_power']
+
+
+class AvgPowerSerializer(serializers.ModelSerializer):
+    avg_power = serializers.FloatField()
+
+    class Meta:
+        model = PowerMeter
+        fields = ['avg_power', 'date',]

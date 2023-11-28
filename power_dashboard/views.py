@@ -5,9 +5,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 import datetime
-from .serializers import UserSerializer, GroupSerializer, PowerMeterSerializer, MinMaxPowerSerializer
+from .serializers import UserSerializer, GroupSerializer, PowerMeterSerializer, MinMaxPowerSerializer, AvgPowerSerializer
 from .models import PowerMeter
-from .filters import PowerMeterDateFilter, MinMaxPowerDateFilter
+from .filters import PowerMeterDateFilter, MinMaxPowerDateFilter, AvgPowerDateFilter
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -60,5 +60,14 @@ class MinMaxPowerViewSet(viewsets.ModelViewSet):
     serializer_class = MinMaxPowerSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = MinMaxPowerDateFilter
+    permission_classes = ()
+    http_method_names = ['get', ]
+
+
+class AvgPowerViewSet(viewsets.ModelViewSet):
+    queryset = PowerMeter.objects.all()
+    serializer_class = AvgPowerSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = AvgPowerDateFilter
     permission_classes = ()
     http_method_names = ['get', ]
