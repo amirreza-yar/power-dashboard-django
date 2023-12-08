@@ -14,3 +14,6 @@ class PowerMeter(models.Model):
     @property
     def date(self):
         return self.datetime.date()
+
+    def __str__(self):
+        return f"{round(self.power, 2)}W at {self.datetime}"
