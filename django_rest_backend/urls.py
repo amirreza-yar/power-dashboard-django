@@ -9,4 +9,4 @@ urlpatterns = [
 
     path('', include('power_dashboard.urls'))
 
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static('static/', document_root=settings.STATIC_ROOT)
