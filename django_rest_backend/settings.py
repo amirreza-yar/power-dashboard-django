@@ -23,11 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-@sjbi4de9)ku!7rqr&lt-*58=8g(z*66j7v*yn_d_mr0i@kyl9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
+DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "192.168.111.109", "rcpss-sutech.ir"]
 
-FORCE_SCRIPT_NAME = '/django'
+# FORCE_SCRIPT_NAME = '/django'
 
 CORS_ALLOW_ALL_ORIGINS = True
 

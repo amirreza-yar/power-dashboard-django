@@ -2,7 +2,7 @@ import django_filters
 from django_filters import rest_framework as filters
 from django.utils import timezone
 from django.db.models import Min, Max, Avg, ExpressionWrapper, F, FloatField
-from django.db.models.functions import TruncDate
+from django.db.models.functions import TruncDate, TruncHour
 import datetime
 
 from .models import PowerMeter
@@ -116,6 +116,21 @@ class AvgPowerDateFilter(django_filters.FilterSet):
 
     def filter_by_date(self, queryset, name, value):
         today = timezone.localdate()
+        if value == 'today':
+            # start_of_day = today.replace(
+            #     hour=0, minute=0, second=0)
+            # end_of_day = today.replace(
+            #     hour=23, minute=59, second=59)
+            print("today is running!")
+            return queryset.filter(
+                datetime__date=today  # Filter for the specific day
+            ).values(
+                hour=TruncHour('datetime')  # Extract hour from datetime
+            ).annotate(
+                avg_power=Avg(ExpressionWrapper(
+                    F('current') * F('voltage') * 0.9, output_field=FloatField()
+                ))
+            )
         if value == 'last7days':
             seven_days_ago = today - timezone.timedelta(days=7)
             return queryset.filter(datetime__date__gte=seven_days_ago, datetime__date__lte=today).values(date=TruncDate('datetime')).annotate(

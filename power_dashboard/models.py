@@ -5,7 +5,7 @@ from django.db.models import Min, Max
 
 class PowerMeter(models.Model):
     current = models.FloatField()
-    voltage = models.FloatField(default=0)
+    voltage = models.FloatField(default=0, null=True)
     datetime = models.DateTimeField(default=timezone.now)
 
     @property
@@ -15,6 +15,10 @@ class PowerMeter(models.Model):
     @property
     def date(self):
         return self.datetime.date()
+
+    @property
+    def hour(self):
+        return self.datetime.hour()
 
     def __str__(self):
         return f"{round(self.power, 2)}W at {self.datetime}"

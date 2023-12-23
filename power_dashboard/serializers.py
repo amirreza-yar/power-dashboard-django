@@ -36,4 +36,4 @@ class AvgPowerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PowerMeter
-        fields = ['avg_power', 'date',]
+        fields = ['avg_power', 'date', 'datetime', 'hour']
