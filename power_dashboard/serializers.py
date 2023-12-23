@@ -19,7 +19,7 @@ class PowerMeterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PowerMeter
-        fields = ['power', 'datetime',]
+        fields = ['power', 'datetime', 'current', 'voltage',]
 
 
 class MinMaxPowerSerializer(serializers.ModelSerializer):

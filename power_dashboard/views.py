@@ -37,6 +37,7 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
     def add_data(self, request):
         print("ADD_DATA called!")
         current = request.GET.get('current')
+        voltage = request.GET.get('voltage')
         datetime_str = request.GET.get('datetime')
         print("current and datetime:", current, datetime_str, sep=", ")
         if current is not None and datetime_str is not None:
@@ -46,7 +47,7 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
 
             # Create a new PowerMeter instance
             power_meter = PowerMeter.objects.create(
-                current=current, datetime=datetime_obj)
+                current=current, voltage=voltage, datetime=datetime_obj)
 
             # Serialize the created instance
             serializer = PowerMeterSerializer(power_meter)
@@ -57,36 +58,36 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
         # If 'current' or 'datetime' parameters are not provided, return a bad request response
         return Response({'error': 'Please provide both current and datetime parameters in the query string.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=["get"], url_path=r'developer_add',)
-    def add_data(self, request):
+    # @action(detail=False, methods=["get"], url_path=r'developer_add',)
+    # def add_data(self, request):
 
-        FILE_PATH = Path(__file__).resolve().parent.parent
-        print(FILE_PATH / 'power_data.csv')
+    #     FILE_PATH = Path(__file__).resolve().parent.parent
+    #     print(FILE_PATH / 'power_data.csv')
 
-        csv_file_path = FILE_PATH / 'power_data.csv'
-        df = pandas.read_csv(csv_file_path, header=None)
+    #     csv_file_path = FILE_PATH / 'power_data.csv'
+    #     df = pandas.read_csv(csv_file_path, header=None)
 
-        dates = list(df.iloc[0:, 0])
-        times = list(df.iloc[0, 0:])
+    #     dates = list(df.iloc[0:, 0])
+    #     times = list(df.iloc[0, 0:])
 
-        counter = 0
+    #     counter = 0
 
-        for date in range(1, len(dates)):
-            for time in range(1, len(times)):
-                datetime_str = f"{dates[date]}T{times[time]}"
-                current = df.iloc[date, time]
-                counter += 1
+    #     for date in range(1, len(dates)):
+    #         for time in range(1, len(times)):
+    #             datetime_str = f"{dates[date]}T{times[time]}"
+    #             current = df.iloc[date, time]
+    #             counter += 1
 
-                datetime_obj = datetime.datetime.strptime(
-                    datetime_str, '%Y-%m-%dT%H:%M:%S')
+    #             datetime_obj = datetime.datetime.strptime(
+    #                 datetime_str, '%Y-%m-%dT%H:%M:%S')
 
-                # Create a new PowerMeter instance
-                power_meter = PowerMeter.objects.create(
-                    current=current, datetime=datetime_obj)
+    #             # Create a new PowerMeter instance
+    #             power_meter = PowerMeter.objects.create(
+    #                 current=current, datetime=datetime_obj)
 
-                print(f"Power created: {power_meter}")
+    #             print(f"Power created: {power_meter}")
 
-        return Response({"ok", True}, status=status.HTTP_201_CREATED)
+    #     return Response({"ok", True}, status=status.HTTP_201_CREATED)
 
 
 class MinMaxPowerViewSet(viewsets.ModelViewSet):
