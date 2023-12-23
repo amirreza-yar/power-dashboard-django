@@ -5,7 +5,7 @@ from django.db.models import Min, Max
 
 class PowerMeter(models.Model):
     current = models.FloatField()
-    voltage = models.FloatField(default=0, null=True)
+    voltage = models.FloatField(default=220, null=True)
     datetime = models.DateTimeField(default=timezone.now)
 
     @property
