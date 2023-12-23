@@ -117,10 +117,6 @@ class AvgPowerDateFilter(django_filters.FilterSet):
     def filter_by_date(self, queryset, name, value):
         today = timezone.localdate()
         if value == 'today':
-            # start_of_day = today.replace(
-            #     hour=0, minute=0, second=0)
-            # end_of_day = today.replace(
-            #     hour=23, minute=59, second=59)
             print("today is running!")
             return queryset.filter(
                 datetime__date=today  # Filter for the specific day
@@ -128,7 +124,7 @@ class AvgPowerDateFilter(django_filters.FilterSet):
                 hour=TruncHour('datetime')  # Extract hour from datetime
             ).annotate(
                 avg_power=Avg(ExpressionWrapper(
-                    F('current') * F('voltage') * 0.9, output_field=FloatField()
+                    F('current') * 220 * 0.9, output_field=FloatField()
                 ))
             )
         if value == 'last7days':
@@ -166,11 +162,14 @@ class AvgPowerDateFilter(django_filters.FilterSet):
             try:
                 requested_datetime = timezone.make_aware(
                     datetime.datetime.strptime(value, '%Y-%m-%d'))
-                return queryset.filter(datetime__date=requested_datetime.date()).values(
-                    date=TruncDate('datetime')
+                return queryset.filter(
+                    datetime__date=requested_datetime  # Filter for the specific day
+                ).values(
+                    hour=TruncHour('datetime')  # Extract hour from datetime
                 ).annotate(
                     avg_power=Avg(ExpressionWrapper(
-                        F('current') * 220 * 0.9, output_field=FloatField())),
+                        F('current') * 220 * 0.9, output_field=FloatField()
+                    ))
                 )
             except ValueError:
                 # Handle invalid date format
