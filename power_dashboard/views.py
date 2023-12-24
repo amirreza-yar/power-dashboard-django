@@ -97,7 +97,7 @@ class DailyStatViewSet(viewsets.ModelViewSet):
                 }
                 return JsonResponse(data)
             else:
-                return JsonResponse({'error': 'No data found for the given date.'}, status=404)
+                return JsonResponse(None, status=200)
 
         except (ValueError, TypeError):
             # Handle invalid date format or missing date parameter
