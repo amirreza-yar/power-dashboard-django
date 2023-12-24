@@ -12,7 +12,7 @@ from .serializers import UserSerializer, GroupSerializer, PowerMeterSerializer, 
 from .models import PowerMeter
 from .filters import PowerMeterDateFilter, MinMaxPowerDateFilter, AvgPowerDateFilter, DailyStatFilter
 
-
+from datetime import timedelta
 from django.http import JsonResponse
 from django.db.models import Min, Max, Avg, ExpressionWrapper, F, FloatField
 
@@ -28,6 +28,58 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permissions_classes = [permissions.IsAuthenticated]
 
+class EnergyStatViewSet(viewsets.ModelViewSet):
+    queryset = PowerMeter.objects.all().order_by('datetime')
+    serializer_class = DailyStatSerializer
+    # filter_backends = (filters.DjangoFilterBackend,)
+    # filterset_class = DailyStatFilter
+    permission_classes = ()
+    http_method_names = ['get', ]
+
+    def list(self, request, *args, **kwargs):
+        # Get the input date range (last7days, last14days, last30days)
+        input_range = request.query_params.get('range')
+
+        # Determine the start date based on the input range
+        today = datetime.date.today()
+        if input_range == 'last7days':
+            start_date = today - timedelta(days=7)
+        elif input_range == 'last14days':
+            start_date = today - timedelta(days=14)
+        elif input_range == 'last30days':
+            start_date = today - timedelta(days=30)
+        else:
+            # Handle invalid input range
+            return JsonResponse({
+                'error': 'Invalid input range.'
+            }, status=400)
+
+        # Filter records within the specified date range
+        queryset = self.get_queryset().filter(datetime__date__gte=start_date, datetime__date__lte=today)
+
+        # Compute energies for each day within the range
+        energy_data = {}
+        for date in (start_date + timedelta(n) for n in range((today - start_date).days + 1)):
+            daily_queryset = queryset.filter(datetime__date=date)
+            hourly_powers = daily_queryset.values(
+                hour=TruncHour('datetime')
+            ).annotate(
+                power=Avg(ExpressionWrapper(
+                    F('current') * 220 * 0.9, output_field=FloatField()
+                ))
+            ).order_by('hour')
+
+            hourly_energies = []
+            for i in range(len(hourly_powers) - 1):
+                energy = ((hourly_powers[i]['power'] +
+                        hourly_powers[i + 1]['power']) / 2) * 1
+                hourly_energies.append(energy)
+
+            total_energy = sum(hourly_energies)
+            energy_data[date.strftime('%Y-%m-%d')] = total_energy
+
+        # Return the energies for each day within the range
+        return JsonResponse(energy_data)
 
 class DailyStatViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('datetime')
