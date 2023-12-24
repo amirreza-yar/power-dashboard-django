@@ -101,7 +101,7 @@ class DailyStatViewSet(viewsets.ModelViewSet):
 
         except (ValueError, TypeError):
             # Handle invalid date format or missing date parameter
-            return JsonResponse({'error': 'Invalid date format or missing date parameter.'}, status=400)
+            return JsonResponse(None, status=200)
 
 
 class PowerMeterViewSet(viewsets.ModelViewSet):
