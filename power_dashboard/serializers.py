@@ -22,6 +22,23 @@ class PowerMeterSerializer(serializers.ModelSerializer):
         fields = ['power', 'datetime', 'current', 'voltage',]
 
 
+class HourlyPowerSerializer(serializers.Serializer):
+    power = serializers.FloatField()
+    hour = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S')
+
+
+class DailyStatSerializer(serializers.ModelSerializer):
+    date = serializers.DateField()
+    min_power = serializers.FloatField()
+    max_power = serializers.FloatField()
+    avg_power = serializers.FloatField()
+    # powers = HourlyPowerSerializer(many=True)
+
+    class Meta:
+        model = PowerMeter
+        fields = ['date', 'min_power', 'max_power', 'avg_power']
+
+
 class MinMaxPowerSerializer(serializers.ModelSerializer):
     min_power = serializers.FloatField()
     max_power = serializers.FloatField()

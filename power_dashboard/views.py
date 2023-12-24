@@ -1,16 +1,20 @@
 from django.contrib.auth.models import User, Group
+from django.db.models.functions import TruncHour
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 import datetime
-import requests
 import pandas
 from pathlib import Path
-from .serializers import UserSerializer, GroupSerializer, PowerMeterSerializer, MinMaxPowerSerializer, AvgPowerSerializer
+from .serializers import UserSerializer, GroupSerializer, PowerMeterSerializer, MinMaxPowerSerializer, AvgPowerSerializer, DailyStatSerializer
 from .models import PowerMeter
-from .filters import PowerMeterDateFilter, MinMaxPowerDateFilter, AvgPowerDateFilter
+from .filters import PowerMeterDateFilter, MinMaxPowerDateFilter, AvgPowerDateFilter, DailyStatFilter
+
+
+from django.http import JsonResponse
+from django.db.models import Min, Max, Avg, ExpressionWrapper, F, FloatField
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -23,6 +27,81 @@ class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permissions_classes = [permissions.IsAuthenticated]
+
+
+class DailyStatViewSet(viewsets.ModelViewSet):
+    queryset = PowerMeter.objects.all().order_by('datetime')
+    serializer_class = DailyStatSerializer
+    # filter_backends = (filters.DjangoFilterBackend,)
+    # filterset_class = DailyStatFilter
+    permission_classes = ()
+    http_method_names = ['get', ]
+
+    def list(self, request, *args, **kwargs):
+        # Assuming the date is passed as a query parameter
+        date_str = request.query_params.get('date')
+        try:
+            # Parse the input date string to a datetime object
+            input_date = datetime.datetime.strptime(
+                date_str, '%Y-%m-%d').date()
+
+            # Filter records for the specific day
+            queryset = self.get_queryset().filter(datetime__date=input_date)
+
+            # Compute min and max power for the specific day
+            min_power = queryset.aggregate(
+                min_power=Min(ExpressionWrapper(
+                    F('current') * 220 * 0.9, output_field=FloatField()
+                ))
+            )['min_power']
+
+            max_power = queryset.aggregate(
+                max_power=Max(ExpressionWrapper(
+                    F('current') * 220 * 0.9, output_field=FloatField()
+                ))
+            )['max_power']
+
+            avg_power = queryset.aggregate(
+                max_power=Avg(ExpressionWrapper(
+                    F('current') * 220 * 0.9, output_field=FloatField()
+                ))
+            )['max_power']
+
+            hourly_powers = queryset.values(
+                hour=TruncHour('datetime')
+            ).annotate(
+                power=Avg(ExpressionWrapper(
+                    F('current') * 220 * 0.9, output_field=FloatField()
+                ))
+            ).order_by('hour')
+
+            hourly_energies = []
+            for i in range(len(hourly_powers) - 1):
+                # Assuming a 1-hour time interval
+                energy = ((hourly_powers[i]['power'] +
+                          hourly_powers[i + 1]['power']) / 2) * 1
+                hourly_energies.append(energy)
+
+            # Compute the total energy consumption for the day
+            total_energy = sum(hourly_energies)
+
+            # Return the results as a JSON response
+            if min_power is not None and max_power is not None:
+                data = {
+                    'date': input_date.strftime('%Y-%m-%d'),
+                    'min_power': min_power,
+                    'max_power': max_power,
+                    'avg_power': avg_power,
+                    'energy': total_energy,
+                    'powers': [{'power': entry['power'], 'hour': entry['hour'].strftime('%Y-%m-%dT%H:%M:%S')} for entry in hourly_powers]
+                }
+                return JsonResponse(data)
+            else:
+                return JsonResponse({'error': 'No data found for the given date.'}, status=404)
+
+        except (ValueError, TypeError):
+            # Handle invalid date format or missing date parameter
+            return JsonResponse({'error': 'Invalid date format or missing date parameter.'}, status=400)
 
 
 class PowerMeterViewSet(viewsets.ModelViewSet):

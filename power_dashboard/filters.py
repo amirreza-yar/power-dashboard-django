@@ -36,6 +36,112 @@ class PowerMeterDateFilter(django_filters.FilterSet):
             except ValueError:
                 # Handle invalid date format
                 return queryset.none()
+        # else:
+            # try:
+            #     # Parse the input date string to a datetime object
+            #     input_date = datetime.datetime.strptime(
+            #         value, '%Y-%m-%d').date()
+
+            #     # Filter records for the specific day
+            #     queryset = queryset.filter(
+            #         datetime__date=input_date).order_by('datetime')
+
+            #     # Compute overall average power for the specific day
+            #     daily_avg = queryset.values(date=TruncDate('datetime')).annotate(
+            #         avg_power=Avg(ExpressionWrapper(
+            #             F('current') * 220 * 0.9, output_field=FloatField()
+            #         ))
+            #     )
+
+            #     # Compute min and max power for the specific day
+            #     daily_stats = queryset.values(date=TruncDate('datetime')).annotate(
+            #         min_power=Min(ExpressionWrapper(
+            #             F('current') * 220 * 0.9, output_field=FloatField()
+            #         )),
+            #         max_power=Max(ExpressionWrapper(
+            #             F('current') * 220 * 0.9, output_field=FloatField()
+            #         ))
+            #     )
+
+            #     print(daily_stats)
+
+            #     # Compute average power for each hour of the specific day
+            #     hourly_powers = queryset.values(
+            #         hour=TruncHour('datetime')
+            #     ).annotate(
+            #         power=Avg(ExpressionWrapper(
+            #             F('current') * 220 * 0.9, output_field=FloatField()
+            #         ))
+            #     ).order_by('hour')
+
+            #     # Format the output
+            #     output = {
+            #         'date': input_date,
+            #         'min_power': daily_stats['min_power'],
+            #         'max_power': daily_stats['max_power'],
+            #         'avg_power': daily_stats['avg_power'],
+            #         'powers': [{'power': entry['power'], 'hour': entry['hour']} for entry in hourly_powers]
+            #     }
+
+            #     return output
+
+            # except ValueError:
+            #     # Handle invalid date format
+            #     return None
+
+            try:
+                pass
+            except:
+                pass
+
+    class Meta:
+        model = PowerMeter
+        fields = ['datetime']
+
+
+class DailyStatFilter(django_filters.FilterSet):
+
+    date = django_filters.CharFilter(
+        field_name='datetime', method='filter_by_date', label="Dates to be filtered")
+
+    def filter_by_date(self, queryset, name, value):
+
+        try:
+            today = timezone.localdate()
+            # Parse the input date string to a datetime object
+            input_date = datetime.datetime.strptime(
+                value, '%Y-%m-%d').date()
+            query = queryset.filter(datetime__date=input_date)
+
+            daily_stats = query.values(date=TruncDate('datetime')).annotate(
+                min_power=Min(ExpressionWrapper(
+                    F('current') * 220 * 0.9, output_field=FloatField()
+                )),
+                max_power=Max(ExpressionWrapper(
+                    F('current') * 220 * 0.9, output_field=FloatField()
+                ))
+            )
+
+            print(daily_stats)
+
+            min_power = queryset.filter(datetime__date=input_date).aggregate(
+                Min('current'))['current__min'] * 220 * 0.9
+            max_power = queryset.filter(datetime__date=input_date).aggregate(
+                Max('current'))['current__max'] * 220 * 0.9
+            avg_power = queryset.filter(datetime__date=input_date).aggregate(
+                Avg('current'))['current__avg'] * 220 * 0.9
+            output = {
+                'date': input_date,
+                'min_power': min_power,
+                'max_power': max_power,
+                'avg_power': avg_power,
+                # 'powers': [{'power': entry['power'], 'hour': entry['hour']} for entry in hourly_powers]
+            }
+            print(output)
+            return output
+        except ValueError:
+            # Handle invalid date format
+            return queryset.none()
 
     class Meta:
         model = PowerMeter
