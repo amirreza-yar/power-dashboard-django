@@ -193,7 +193,7 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
             # Create a new PowerMeter instance
             # "current / 2" --> Yousef Niazi requested
             power_meter = PowerMeter.objects.create(
-                current=current / 2, voltage=voltage, datetime=datetime_obj)
+                current=float(current) / 2, voltage=voltage, datetime=datetime_obj)
 
             # Serialize the created instance
             serializer = PowerMeterSerializer(power_meter)
