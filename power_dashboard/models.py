@@ -10,7 +10,7 @@ class PowerMeter(models.Model):
 
     @property
     def power(self):
-        return float(self.current) * 220 * 0.9
+        return float(self.current) * float(self.voltage) * 0.9
 
     @property
     def date(self):

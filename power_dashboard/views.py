@@ -180,19 +180,20 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path=r'add',)
     def add_data(self, request):
-        print("ADD_DATA called!")
+        # print("ADD_DATA called!")
         current = request.GET.get('current')
         voltage = request.GET.get('voltage')
         datetime_str = request.GET.get('datetime')
-        print("current and datetime:", current, datetime_str, sep=", ")
+        # print("current and datetime:", current, datetime_str, sep=", ")
         if current is not None and datetime_str is not None:
             # Convert datetime string to a datetime object
             datetime_obj = datetime.datetime.strptime(
                 datetime_str, '%Y-%m-%dT%H:%M:%S')
 
             # Create a new PowerMeter instance
+            # "current / 2" --> Yousef Niazi requested
             power_meter = PowerMeter.objects.create(
-                current=current, voltage=voltage, datetime=datetime_obj)
+                current=current / 2, voltage=voltage, datetime=datetime_obj)
 
             # Serialize the created instance
             serializer = PowerMeterSerializer(power_meter)
