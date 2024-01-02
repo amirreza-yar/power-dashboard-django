@@ -28,6 +28,14 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permissions_classes = [permissions.IsAuthenticated]
 
+
+class RealTimeViewSet(viewsets.ModelViewSet):
+    queryset = PowerMeter.objects.all().order_by('-datetime')[:20]
+    serializer_class = PowerMeterSerializer
+    permissions_classes = []
+    http_method_names = ['get',]
+
+
 class EnergyStatViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('datetime')
     serializer_class = DailyStatSerializer
@@ -55,7 +63,8 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
             }, status=400)
 
         # Filter records within the specified date range
-        queryset = self.get_queryset().filter(datetime__date__gte=start_date, datetime__date__lte=today)
+        queryset = self.get_queryset().filter(
+            datetime__date__gte=start_date, datetime__date__lte=today)
 
         # Compute energies for each day within the range
         energy_data = {}
@@ -72,7 +81,7 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
             hourly_energies = []
             for i in range(len(hourly_powers) - 1):
                 energy = ((hourly_powers[i]['power'] +
-                        hourly_powers[i + 1]['power']) / 2) * 1
+                           hourly_powers[i + 1]['power']) / 2) * 1
                 hourly_energies.append(energy)
 
             total_energy = sum(hourly_energies)
@@ -80,6 +89,7 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
 
         # Return the energies for each day within the range
         return JsonResponse(energy_data)
+
 
 class DailyStatViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('datetime')
