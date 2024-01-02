@@ -35,6 +35,38 @@ class RealTimeViewSet(viewsets.ModelViewSet):
     permissions_classes = []
     http_method_names = ['get',]
 
+    def list(self, request, *args, **kwargs):
+        # Assuming the date is passed as a query parameter
+        try:
+            # Filter records for the specific day
+            queryset = self.get_queryset()
+
+            # Compute min and max power for the specific day
+
+            avg_power = queryset.aggregate(
+                avg_power=Avg(ExpressionWrapper(
+                    F('current') * 220 * 0.9, output_field=FloatField()
+                ))
+            )['avg_power']
+
+            # Return the results as a JSON response
+            data = {
+                'avg_power': avg_power,
+                'powers': [{'power': entry['power'], 'hour': entry['hour'].strftime('%Y-%m-%dT%H:%M:%S')} for entry in queryset]
+            }
+            return JsonResponse(data)
+
+        except (ValueError, TypeError):
+            # Handle invalid date format or missing date parameter
+            return JsonResponse({
+                'date': None,
+                'min_power': None,
+                'max_power': None,
+                'avg_power': None,
+                'energy': None,
+                'powers': None,
+            }, status=200)
+
 
 class EnergyStatViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('datetime')
