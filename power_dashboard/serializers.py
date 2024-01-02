@@ -1,12 +1,16 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from .models import PowerMeter
+from .models import PowerMeter, CustomUser
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = User
-        fields = ['url', 'username', 'email', 'groups']
+        model = CustomUser
+        fields = ['url', 'username', 'email', 'groups', 'uuid']
+        extra_kwargs = {
+            # This tells DRF to use 'uuid' as the lookup field
+            'url': {'lookup_field': 'uuid'}
+        }
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
@@ -17,9 +21,11 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 
 class PowerMeterSerializer(serializers.ModelSerializer):
 
+    user_uuid = serializers.ReadOnlyField(source='user.uuid')
+
     class Meta:
         model = PowerMeter
-        fields = ['power', 'datetime', 'current', 'voltage',]
+        fields = ['power', 'datetime', 'current', 'voltage', 'user_uuid']
 
 
 class HourlyPowerSerializer(serializers.Serializer):

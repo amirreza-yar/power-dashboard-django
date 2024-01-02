@@ -9,7 +9,7 @@ import datetime
 import pandas
 from pathlib import Path
 from .serializers import UserSerializer, GroupSerializer, PowerMeterSerializer, MinMaxPowerSerializer, AvgPowerSerializer, DailyStatSerializer
-from .models import PowerMeter
+from .models import PowerMeter, CustomUser
 from .filters import PowerMeterDateFilter, MinMaxPowerDateFilter, AvgPowerDateFilter, DailyStatFilter
 
 from datetime import timedelta
@@ -18,15 +18,23 @@ from django.db.models import Min, Max, Avg, ExpressionWrapper, F, FloatField
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all().order_by('-date_joined')
+    queryset = CustomUser.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
     permissions_classes = [permissions.IsAuthenticated]
+    lookup_field = 'uuid'
 
+class RealTimeViewSet(viewsets.ModelViewSet):
+    queryset = PowerMeter.objects.all().order_by('-datetime')[:20]
+    serializer_class = PowerMeterSerializer
+    permissions_classes = []
+    http_method_names = ['get',]
+    # lookup_field = 'uuid'
 
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permissions_classes = [permissions.IsAuthenticated]
+
 
 class EnergyStatViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('datetime')
@@ -55,7 +63,8 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
             }, status=400)
 
         # Filter records within the specified date range
-        queryset = self.get_queryset().filter(datetime__date__gte=start_date, datetime__date__lte=today)
+        queryset = self.get_queryset().filter(
+            datetime__date__gte=start_date, datetime__date__lte=today)
 
         # Compute energies for each day within the range
         energy_data = {}
@@ -72,7 +81,7 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
             hourly_energies = []
             for i in range(len(hourly_powers) - 1):
                 energy = ((hourly_powers[i]['power'] +
-                        hourly_powers[i + 1]['power']) / 2) * 1
+                           hourly_powers[i + 1]['power']) / 2) * 1
                 hourly_energies.append(energy)
 
             total_energy = sum(hourly_energies)
@@ -80,6 +89,7 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
 
         # Return the energies for each day within the range
         return JsonResponse(energy_data)
+
 
 class DailyStatViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('datetime')
@@ -184,25 +194,31 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
         current = request.GET.get('current')
         voltage = request.GET.get('voltage')
         datetime_str = request.GET.get('datetime')
+        user_uuid = request.GET.get('uuid')
+        print(user_uuid)
         # print("current and datetime:", current, datetime_str, sep=", ")
-        if current is not None and datetime_str is not None:
+        if current is not None and datetime_str is not None and user_uuid is not None:
             # Convert datetime string to a datetime object
-            datetime_obj = datetime.datetime.strptime(
-                datetime_str, '%Y-%m-%dT%H:%M:%S')
 
-            # Create a new PowerMeter instance
-            # "current / 2" --> Yousef Niazi requested
-            power_meter = PowerMeter.objects.create(
-                current=float(current) / 2, voltage=voltage, datetime=datetime_obj)
+            try:
 
-            # Serialize the created instance
-            serializer = PowerMeterSerializer(power_meter)
+                user = CustomUser.objects.get(uuid=user_uuid)
+                datetime_obj = datetime.datetime.strptime(
+                    datetime_str, '%Y-%m-%dT%H:%M:%S')
 
-            # Return a successful response
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                # "current / 2" --> Yousef Niazi requested
+                power_meter = PowerMeter.objects.create(
+                    current=float(current) / 2, voltage=voltage, datetime=datetime_obj, user=user)
+
+                serializer = PowerMeterSerializer(power_meter)
+
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except:
+                Response({'error': 'User does not exists.'},
+                         status=status.HTTP_400_BAD_REQUEST)
 
         # If 'current' or 'datetime' parameters are not provided, return a bad request response
-        return Response({'error': 'Please provide both current and datetime parameters in the query string.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Please provide both current, datetime and uuid parameters in the query string.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # @action(detail=False, methods=["get"], url_path=r'developer_add',)
     # def add_data(self, request):
