@@ -30,7 +30,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class RealTimeViewSet(viewsets.ModelViewSet):
-    queryset = PowerMeter.objects.all().order_by('-datetime')[:40]
+    queryset = PowerMeter.objects.all().order_by('-datetime')
     serializer_class = PowerMeterSerializer
     permissions_classes = []
     http_method_names = ['get',]
@@ -52,7 +52,7 @@ class RealTimeViewSet(viewsets.ModelViewSet):
             # Return the results as a JSON response
             data = {
                 'avg_power': avg_power,
-                'powers': [{'power': entry.power, 'hour': entry.datetime} for entry in queryset],
+                'powers': [{'power': entry.power, 'hour': entry.datetime} for entry in queryset[:40]],
             }
             return JsonResponse(data)
 
