@@ -30,7 +30,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class RealTimeViewSet(viewsets.ModelViewSet):
-    queryset = PowerMeter.objects.all().order_by('-datetime')[:20]
+    queryset = PowerMeter.objects.all().order_by('-datetime')[:40]
     serializer_class = PowerMeterSerializer
     permissions_classes = []
     http_method_names = ['get',]
