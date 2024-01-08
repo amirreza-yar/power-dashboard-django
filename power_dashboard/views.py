@@ -23,19 +23,20 @@ from django.db.models import Min, Max, Avg, ExpressionWrapper, F, FloatField
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
+    lookup_field = 'uuid'
 
 
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
 
 class RealTimeViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('-datetime')
     serializer_class = PowerMeterSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get',]
 
     def list(self, request, *args, **kwargs):
@@ -73,7 +74,7 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
     serializer_class = DailyStatSerializer
     # filter_backends = (filters.DjangoFilterBackend,)
     # filterset_class = DailyStatFilter
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', ]
 
     def list(self, request, *args, **kwargs):
@@ -128,7 +129,7 @@ class DailyStatViewSet(viewsets.ModelViewSet):
     serializer_class = DailyStatSerializer
     # filter_backends = (filters.DjangoFilterBackend,)
     # filterset_class = DailyStatFilter
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', ]
 
     def list(self, request, *args, **kwargs):
@@ -226,62 +227,68 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
         current = request.GET.get('current')
         voltage = request.GET.get('voltage')
         datetime_str = request.GET.get('datetime')
+        user_uuid = request.GET.get('uuid')
+        print(user_uuid)
         # print("current and datetime:", current, datetime_str, sep=", ")
-        if current is not None and datetime_str is not None:
+        if current is not None and datetime_str is not None and user_uuid is not None:
             # Convert datetime string to a datetime object
-            datetime_obj = datetime.datetime.strptime(
-                datetime_str, '%Y-%m-%dT%H:%M:%S')
 
-            # Create a new PowerMeter instance
-            # "current / 2" --> Yousef Niazi requested
-            power_meter = PowerMeter.objects.create(
-                current=float(current) / 2, voltage=voltage, datetime=datetime_obj)
+            try:
 
-            # Serialize the created instance
-            serializer = PowerMeterSerializer(power_meter)
+                user = CustomUser.objects.get(uuid=user_uuid)
+                datetime_obj = datetime.datetime.strptime(
+                    datetime_str, '%Y-%m-%dT%H:%M:%S')
 
-            # Return a successful response
-            return Response(serializer.data, status=status.HTTP_200_OK)
+                # "current / 2" --> Yousef Niazi requested
+                power_meter = PowerMeter.objects.create(
+                    current=float(current) / 2, voltage=voltage, datetime=datetime_obj, user=user)
+
+                serializer = PowerMeterSerializer(power_meter)
+
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except:
+                Response({'error': 'User does not exists.'},
+                         status=status.HTTP_400_BAD_REQUEST)
 
         # If 'current' or 'datetime' parameters are not provided, return a bad request response
-        return Response({'error': 'Please provide both current and datetime parameters in the query string.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Please provide both current, datetime and uuid parameters in the query string.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=["get"], url_path=r'developer_add',)
-    def add_data(self, request):
-        try:
-            password = request.GET.get('pass')
-            if password == "*987412365Yar":
-                FILE_PATH = Path(__file__).resolve().parent.parent
-                print(FILE_PATH / 'power_data.csv')
+    # @action(detail=False, methods=["get"], url_path=r'developer_add',)
+    # def add_data(self, request):
+    #     try:
+    #         password = request.GET.get('pass')
+    #         if password == "*987412365Yar":
+    #             FILE_PATH = Path(__file__).resolve().parent.parent
+    #             print(FILE_PATH / 'power_data.csv')
 
-                csv_file_path = FILE_PATH / 'power_data.csv'
-                df = pandas.read_csv(csv_file_path, header=None)
+    #             csv_file_path = FILE_PATH / 'power_data.csv'
+    #             df = pandas.read_csv(csv_file_path, header=None)
 
-                dates = list(df.iloc[0:, 0])
-                times = list(df.iloc[0, 0:])
+    #             dates = list(df.iloc[0:, 0])
+    #             times = list(df.iloc[0, 0:])
 
-                counter = 0
+    #             counter = 0
 
-                for date in range(1, len(dates)):
-                    for time in range(1, len(times)):
-                        datetime_str = f"{dates[date]}T{times[time]}"
-                        current = df.iloc[date, time]
-                        counter += 1
+    #             for date in range(1, len(dates)):
+    #                 for time in range(1, len(times)):
+    #                     datetime_str = f"{dates[date]}T{times[time]}"
+    #                     current = df.iloc[date, time]
+    #                     counter += 1
 
-                        datetime_obj = datetime.datetime.strptime(
-                            datetime_str, '%Y-%m-%dT%H:%M:%S')
+    #                     datetime_obj = datetime.datetime.strptime(
+    #                         datetime_str, '%Y-%m-%dT%H:%M:%S')
 
-                        # Create a new PowerMeter instance
-                        power_meter = PowerMeter.objects.create(
-                            current=current, datetime=datetime_obj)
+    #                     # Create a new PowerMeter instance
+    #                     power_meter = PowerMeter.objects.create(
+    #                         current=current, datetime=datetime_obj)
 
-                        print(f"Power created: {power_meter}")
+    #                     print(f"Power created: {power_meter}")
 
-                return Response({"ok", True}, status=status.HTTP_200_OK)
-            else:
-                return Response({"ok", False}, status=status.HTTP_400_BAD_REQUEST)
-        except:
-            return Response({"ok", False}, status=status.HTTP_403_FORBIDDEN)
+    #             return Response({"ok", True}, status=status.HTTP_200_OK)
+    #         else:
+    #             return Response({"ok", False}, status=status.HTTP_400_BAD_REQUEST)
+    #     except:
+    #         return Response({"ok", False}, status=status.HTTP_403_FORBIDDEN)
 
 
 class MinMaxPowerViewSet(viewsets.ModelViewSet):

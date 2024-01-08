@@ -5,7 +5,7 @@ from .views import UserViewSet, PowerMeterViewSet, GroupViewSet, MinMaxPowerView
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'groups', GroupViewSet)
-router.register(r'power', PowerMeterViewSet)
+# router.register(r'power', PowerMeterViewSet)
 # router.register(r'min-max-power', MinMaxPowerViewSet)
 # router.register(r'avg-power', AvgPowerViewSet)
 router.register(r'daily-stat', DailyStatViewSet)
