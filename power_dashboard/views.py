@@ -23,19 +23,19 @@ from django.db.models import Min, Max, Avg, ExpressionWrapper, F, FloatField
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permissions_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permissions_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class RealTimeViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('-datetime')
     serializer_class = PowerMeterSerializer
-    permissions_classes = []
+    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get',]
 
     def list(self, request, *args, **kwargs):
@@ -73,7 +73,7 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
     serializer_class = DailyStatSerializer
     # filter_backends = (filters.DjangoFilterBackend,)
     # filterset_class = DailyStatFilter
-    permission_classes = ()
+    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', ]
 
     def list(self, request, *args, **kwargs):
@@ -128,7 +128,7 @@ class DailyStatViewSet(viewsets.ModelViewSet):
     serializer_class = DailyStatSerializer
     # filter_backends = (filters.DjangoFilterBackend,)
     # filterset_class = DailyStatFilter
-    permission_classes = ()
+    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', ]
 
     def list(self, request, *args, **kwargs):
@@ -215,10 +215,10 @@ class DailyStatViewSet(viewsets.ModelViewSet):
 class PowerMeterViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('datetime')
     serializer_class = PowerMeterSerializer
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_class = PowerMeterDateFilter
-    permission_classes = ()
-    http_method_names = ['get', ]
+    # filter_backends = (filters.DjangoFilterBackend,)
+    # filterset_class = PowerMeterDateFilter
+    # permission_classes = [permissions.IsAuthenticated]
+    # http_method_names = ['get', ]
 
     @action(detail=False, methods=["get"], url_path=r'add',)
     def add_data(self, request):
@@ -330,3 +330,11 @@ class PowerMeterCSVExportAPIView(APIView):
 
         response['Content-Disposition'] = f'attachment; filename="{str(jalali_date)}_full_data.csv"'
         return super().finalize_response(request, response, *args, **kwargs)
+    
+
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check previously happening

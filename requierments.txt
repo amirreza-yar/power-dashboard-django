@@ -6,10 +6,12 @@ django-cors-headers==4.3.1
 django-filter==23.4
 djangorestframework==3.14.0
 djangorestframework-csv==3.0.2
+djangorestframework-simplejwt==5.3.1
 idna==3.6
 jdatetime==4.1.1
 numpy==1.26.2
 pandas==2.1.4
+PyJWT==2.8.0
 python-dateutil==2.8.2
 pytz==2023.3.post1
 requests==2.31.0
