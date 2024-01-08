@@ -1,22 +1,23 @@
 from django.contrib.auth.models import Group
 from django.db.models.functions import TruncHour
+from django.utils import timezone
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 import datetime
+import jdatetime
 import pandas
 from pathlib import Path
 from django.contrib.auth import get_user_model
-from .serializers import UserSerializer, GroupSerializer, PowerMeterSerializer, MinMaxPowerSerializer, AvgPowerSerializer, DailyStatSerializer
+from .serializers import UserSerializer, GroupSerializer, PowerMeterSerializer, MinMaxPowerSerializer, AvgPowerSerializer, DailyStatSerializer, PowerMeterExportSerializer
 from .models import PowerMeter, CustomUser
 from .filters import PowerMeterDateFilter, MinMaxPowerDateFilter, AvgPowerDateFilter, DailyStatFilter
-
+from rest_framework_csv.renderers import CSVRenderer
 from datetime import timedelta
 from django.http import JsonResponse
 from django.db.models import Min, Max, Avg, ExpressionWrapper, F, FloatField
-
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -50,7 +51,8 @@ class RealTimeViewSet(viewsets.ModelViewSet):
                 ))
             )['max_power']
 
-            print([{'power': entry.power, 'hour': entry.datetime} for entry in queryset])
+            print([{'power': entry.power, 'hour': entry.datetime}
+                  for entry in queryset])
             # Return the results as a JSON response
             data = {
                 'avg_power': avg_power,
@@ -298,3 +300,33 @@ class AvgPowerViewSet(viewsets.ModelViewSet):
     filterset_class = AvgPowerDateFilter
     permission_classes = ()
     http_method_names = ['get', ]
+
+
+class PowerMeterCSVExportAPIView(APIView):
+    renderer_classes = [CSVRenderer]
+    csv_filename = 'custom_filename.csv'
+
+    def get(self, request, *args, **kwargs):
+        queryset = PowerMeter.objects.all()
+        value = request.GET.get('date')
+        try:
+            # Parse the input date string to a datetime object
+            input_date = datetime.datetime.strptime(
+                value, '%Y-%m-%d').date()
+            # Filter records for the specified date
+            filtered_queryset = queryset.filter(
+                datetime__date=input_date).order_by('datetime')
+            serializer = PowerMeterExportSerializer(
+                filtered_queryset, many=True)
+            return Response(serializer.data)
+        except ValueError:
+            return queryset.none()
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        date = request.GET.get('date')
+        input_date = datetime.datetime.strptime(
+                date, '%Y-%m-%d').date()
+        jalali_date = jdatetime.date.fromgregorian(date=input_date)
+
+        response['Content-Disposition'] = f'attachment; filename="{str(jalali_date)}_full_data.csv"'
+        return super().finalize_response(request, response, *args, **kwargs)

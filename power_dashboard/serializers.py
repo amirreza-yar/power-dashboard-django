@@ -27,6 +27,13 @@ class PowerMeterSerializer(serializers.ModelSerializer):
         model = PowerMeter
         fields = ['power', 'datetime', 'current', 'voltage', 'user_uuid']
 
+class PowerMeterExportSerializer(serializers.ModelSerializer):
+
+    user_uuid = serializers.ReadOnlyField(source='user.uuid')
+
+    class Meta:
+        model = PowerMeter
+        fields = ['power', 'jdate', 'hour', 'current', 'voltage', 'user_uuid']
 
 class HourlyPowerSerializer(serializers.Serializer):
     power = serializers.FloatField()
