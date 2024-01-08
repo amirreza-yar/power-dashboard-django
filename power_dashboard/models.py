@@ -33,8 +33,8 @@ class PowerMeter(models.Model):
         return f"{jalali_date.year}-{jalali_date.month}-{jalali_date.day}"
 
     @property
-    def hour(self):
-        return str(timezone.localtime(self.datetime).hour) + ":00"
+    def time(self):
+        return f"{timezone.localtime(self.datetime).hour:02}:{timezone.localtime(self.datetime).minute:02}:{timezone.localtime(self.datetime).second:02}"
 
     def __str__(self):
         return f"{round(self.power, 2)}W at {self.datetime}"

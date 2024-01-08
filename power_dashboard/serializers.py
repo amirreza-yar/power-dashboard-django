@@ -33,7 +33,7 @@ class PowerMeterExportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PowerMeter
-        fields = ['power', 'jdate', 'hour', 'current', 'voltage', 'user_uuid']
+        fields = ['power', 'jdate', 'time', 'current', 'voltage', 'user_uuid']
 
 class HourlyPowerSerializer(serializers.Serializer):
     power = serializers.FloatField()
