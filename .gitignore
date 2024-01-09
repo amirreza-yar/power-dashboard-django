@@ -92,3 +92,4 @@ db.sqlite3
 static
 
 power_dashboard/migrations/*
+custom_user/migrations/*
