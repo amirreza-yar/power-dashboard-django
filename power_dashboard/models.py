@@ -1,12 +1,7 @@
 from django.db import models
 from django.utils import timezone
-from django.db.models import Min, Max
-from django.contrib.auth.models import AbstractUser, User
-import uuid
 import jdatetime
-
-class CustomUser(AbstractUser):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+from custom_auth.models import CustomUser
 
 
 class PowerMeter(models.Model):
@@ -22,14 +17,14 @@ class PowerMeter(models.Model):
     @property
     def date(self):
         return timezone.localtime(self.datetime).date()
-    
+
     @property
     def jdate(self):
         localized_datetime = timezone.localtime(self.datetime)
         gregorian_date = localized_datetime.date()
-        
+
         jalali_date = jdatetime.date.fromgregorian(date=gregorian_date)
-        
+
         return f"{jalali_date.year}-{jalali_date.month}-{jalali_date.day}"
 
     @property
