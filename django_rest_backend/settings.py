@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "192.168.111.109", "rcpss-sutech.ir"]
 
-# FORCE_SCRIPT_NAME = '/django'
+FORCE_SCRIPT_NAME = '/django'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -82,8 +82,10 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
-CSRF_COOKIE_SECURE = False
-CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+SESSION_COOKIE_SAMESITE = 'None'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
