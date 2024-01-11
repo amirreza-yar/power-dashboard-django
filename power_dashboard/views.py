@@ -253,42 +253,47 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
         # If 'current' or 'datetime' parameters are not provided, return a bad request response
         return Response({'error': 'Please provide both current, datetime and uuid parameters in the query string.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # @action(detail=False, methods=["get"], url_path=r'developer_add',)
-    # def add_data(self, request):
-    #     try:
-    #         password = request.GET.get('pass')
-    #         if password == "*987412365Yar":
-    #             FILE_PATH = Path(__file__).resolve().parent.parent
-    #             print(FILE_PATH / 'power_data.csv')
+    @action(detail=False, methods=["get"], url_path=r'developer_add',)
+    def add_data(self, request):
+        try:
+            password = request.GET.get('pass')
+            if password == "*987412365Yar":
+                print("pass: ", password)
+                FILE_PATH = Path(__file__).resolve().parent.parent
+                print(FILE_PATH / 'power_data.csv')
 
-    #             csv_file_path = FILE_PATH / 'power_data.csv'
-    #             df = pandas.read_csv(csv_file_path, header=None)
+                csv_file_path = FILE_PATH / 'power_data.csv'
+                df = pandas.read_csv(csv_file_path, header=None)
 
-    #             dates = list(df.iloc[0:, 0])
-    #             times = list(df.iloc[0, 0:])
+                dates = list(df.iloc[0:, 0])
+                times = list(df.iloc[0, 0:])
 
-    #             counter = 0
+                user_uuid = "wUGcbtMO"
+                user = CustomUser.objects.get(uuid=user_uuid)
+                print(user)
+                
+                counter = 0
 
-    #             for date in range(1, len(dates)):
-    #                 for time in range(1, len(times)):
-    #                     datetime_str = f"{dates[date]}T{times[time]}"
-    #                     current = df.iloc[date, time]
-    #                     counter += 1
+                for date in range(1, len(dates)):
+                    for time in range(1, len(times)):
+                        datetime_str = f"{dates[date]}T{times[time]}"
+                        current = df.iloc[date, time]
+                        counter += 1
 
-    #                     datetime_obj = datetime.datetime.strptime(
-    #                         datetime_str, '%Y-%m-%dT%H:%M:%S')
+                        datetime_obj = datetime.datetime.strptime(
+                            datetime_str, '%Y-%m-%dT%H:%M:%S')
 
-    #                     # Create a new PowerMeter instance
-    #                     power_meter = PowerMeter.objects.create(
-    #                         current=current, datetime=datetime_obj)
+                        # Create a new PowerMeter instance
+                        power_meter = PowerMeter.objects.create(
+                            current=current, datetime=datetime_obj, user=user)
 
-    #                     print(f"Power created: {power_meter}")
+                        print(f"Power created: {power_meter}")
 
-    #             return Response({"ok", True}, status=status.HTTP_200_OK)
-    #         else:
-    #             return Response({"ok", False}, status=status.HTTP_400_BAD_REQUEST)
-    #     except:
-    #         return Response({"ok", False}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"ok", True}, status=status.HTTP_200_OK)
+            else:
+                return Response({"ok", False}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({"ok", False}, status=status.HTTP_403_FORBIDDEN)
 
 
 class MinMaxPowerViewSet(viewsets.ModelViewSet):
