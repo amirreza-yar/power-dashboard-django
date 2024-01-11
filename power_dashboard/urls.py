@@ -14,5 +14,6 @@ router.register(r'realtime', RealTimeViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('power-export', PowerMeterCSVExportAPIView.as_view()),
     
 ]

@@ -314,6 +314,7 @@ class PowerMeterCSVExportAPIView(APIView):
     csv_filename = 'custom_filename.csv'
 
     def get(self, request, *args, **kwargs):
+        print("I'm called")
         queryset = PowerMeter.objects.all()
         value = request.GET.get('date')
         try:
