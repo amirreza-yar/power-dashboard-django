@@ -5,7 +5,7 @@ from custom_auth.models import CustomUser
 
 
 class PowerMeter(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     current = models.FloatField()
     voltage = models.FloatField(default=220, null=True)
     datetime = models.DateTimeField(default=timezone.now)
