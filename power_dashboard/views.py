@@ -353,23 +353,22 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
 
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 class ValidateJWTToken(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        # try:
-        # Convert raw timestamp to a datetime object with UTC timezone
-        # utc_datetime = datetime.utcfromtimestamp(request.auth['exp']).replace(tzinfo=timezone.utc)
+        
+        refresh = RefreshToken.for_user(request.user)
+        access_token = str(refresh.access_token)
 
-        # # Convert UTC datetime to your desired timezone
-        # desired_timezone = timezone.get_current_timezone()  # Replace with your desired timezone
-        # localized_datetime = utc_datetime.astimezone(desired_timezone)
-        print(request.user)
+        # print(access_token)
         # print(localized_datetime)
         user_response = {
-            "user": str(request.user.uuid),
+            # "user": str(request.user.uuid),
+            "access_token": access_token,
             "token_exp": request.auth['exp'],
         }
 
