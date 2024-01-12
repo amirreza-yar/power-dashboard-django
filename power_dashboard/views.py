@@ -358,7 +358,7 @@ class ValidateJWTToken(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         # try:
         # Convert raw timestamp to a datetime object with UTC timezone
         # utc_datetime = datetime.utcfromtimestamp(request.auth['exp']).replace(tzinfo=timezone.utc)
