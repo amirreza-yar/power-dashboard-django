@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "192.168.111.109", "rcpss-sutech.ir"]
 
-# FORCE_SCRIPT_NAME = '/django'
+FORCE_SCRIPT_NAME = '/django'
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
