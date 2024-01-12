@@ -359,7 +359,7 @@ class ValidateJWTToken(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         
         refresh = RefreshToken.for_user(request.user)
         access_token = str(refresh.access_token)
