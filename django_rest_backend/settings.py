@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -37,7 +38,6 @@ CORS_ALLOW_CREDENTIALS = True
 # ]
 
 
-
 AUTH_USER_MODEL = "custom_auth.CustomUser"
 
 # Application definition
@@ -62,10 +62,11 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ],
 }
 
-from datetime import timedelta
 
 # JWT Settings
 SIMPLE_JWT = {

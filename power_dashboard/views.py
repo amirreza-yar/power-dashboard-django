@@ -43,7 +43,7 @@ class RealTimeViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         # Assuming the date is passed as a query parameter
         try:
-            queryset = self.get_queryset()
+            queryset = self.get_queryset().filter(user=request.user)
 
             # Compute min and max power for the specific day
 
@@ -98,7 +98,7 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
 
         # Filter records within the specified date range
         queryset = self.get_queryset().filter(
-            datetime__date__gte=start_date, datetime__date__lte=today)
+            datetime__date__gte=start_date, datetime__date__lte=today).filter(user=request.user)
 
         # Compute energies for each day within the range
         energy_data = {}
@@ -142,7 +142,7 @@ class DailyStatViewSet(viewsets.ModelViewSet):
                 date_str, '%Y-%m-%d').date()
 
             # Filter records for the specific day
-            queryset = self.get_queryset().filter(datetime__date=input_date)
+            queryset = self.get_queryset().filter(datetime__date=input_date).filter(user=request.user)
 
             # Compute min and max power for the specific day
             min_power = queryset.aggregate(
@@ -189,6 +189,7 @@ class DailyStatViewSet(viewsets.ModelViewSet):
                     'max_power': max_power,
                     'avg_power': avg_power,
                     'energy': total_energy,
+                    'user_uuid': str(request.user.uuid),
                     'powers': [{'power': entry['power'], 'hour': entry['hour'].strftime('%Y-%m-%dT%H:%M:%S')} for entry in hourly_powers]
                 }
                 return JsonResponse(data)
