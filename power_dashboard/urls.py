@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
-from .views import UserViewSet, PowerMeterViewSet, GroupViewSet, MinMaxPowerViewSet, AvgPowerViewSet, DailyStatViewSet, EnergyStatViewSet, RealTimeViewSet, PowerMeterCSVExportAPIView
+from .views import UserViewSet, PowerMeterViewSet, GroupViewSet, MinMaxPowerViewSet, AvgPowerViewSet, DailyStatViewSet, EnergyStatViewSet, RealTimeViewSet, PowerMeterCSVExportAPIView, ValidateJWTToken
 
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -15,5 +15,6 @@ router.register(r'realtime', RealTimeViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('power-export', PowerMeterCSVExportAPIView.as_view()),
+    path('validate-token/', ValidateJWTToken.as_view()),
     
 ]

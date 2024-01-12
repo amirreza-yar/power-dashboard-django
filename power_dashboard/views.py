@@ -1,3 +1,4 @@
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from django.contrib.auth.models import Group
 from django.db.models.functions import TruncHour
 from django.utils import timezone
@@ -36,7 +37,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 class RealTimeViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('-datetime')
     serializer_class = PowerMeterSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get',]
 
     def list(self, request, *args, **kwargs):
@@ -74,7 +75,7 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
     serializer_class = DailyStatSerializer
     # filter_backends = (filters.DjangoFilterBackend,)
     # filterset_class = DailyStatFilter
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', ]
 
     def list(self, request, *args, **kwargs):
@@ -129,7 +130,7 @@ class DailyStatViewSet(viewsets.ModelViewSet):
     serializer_class = DailyStatSerializer
     # filter_backends = (filters.DjangoFilterBackend,)
     # filterset_class = DailyStatFilter
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', ]
 
     def list(self, request, *args, **kwargs):
@@ -254,7 +255,7 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
         return Response({'error': 'Please provide both current, datetime and uuid parameters in the query string.'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=["get"], url_path=r'developer_add',)
-    def add_data(self, request):
+    def add_data_dev(self, request):
         try:
             password = request.GET.get('pass')
             if password == "*987412365Yar":
@@ -271,7 +272,7 @@ class PowerMeterViewSet(viewsets.ModelViewSet):
                 user_uuid = "wUGcbtMO"
                 user = CustomUser.objects.get(uuid=user_uuid)
                 print(user)
-                
+
                 counter = 0
 
                 for date in range(1, len(dates)):
@@ -317,10 +318,12 @@ class AvgPowerViewSet(viewsets.ModelViewSet):
 class PowerMeterCSVExportAPIView(APIView):
     renderer_classes = [CSVRenderer]
     csv_filename = 'custom_filename.csv'
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        print("I'm called")
-        queryset = PowerMeter.objects.all()
+        user = request.user
+        print("I'm called, user is: ", user)
+        queryset = PowerMeter.objects.all().filter(user=user)
         value = request.GET.get('date')
         try:
             # Parse the input date string to a datetime object
@@ -338,16 +341,38 @@ class PowerMeterCSVExportAPIView(APIView):
     def finalize_response(self, request, response, *args, **kwargs):
         date = request.GET.get('date')
         input_date = datetime.datetime.strptime(
-                date, '%Y-%m-%d').date()
+            date, '%Y-%m-%d').date()
         jalali_date = jdatetime.date.fromgregorian(date=input_date)
 
         response['Content-Disposition'] = f'attachment; filename="{str(jalali_date)}_full_data.csv"'
         return super().finalize_response(request, response, *args, **kwargs)
-    
 
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
+
+
+class ValidateJWTToken(APIView):
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # try:
+        # Convert raw timestamp to a datetime object with UTC timezone
+        # utc_datetime = datetime.utcfromtimestamp(request.auth['exp']).replace(tzinfo=timezone.utc)
+
+        # # Convert UTC datetime to your desired timezone
+        # desired_timezone = timezone.get_current_timezone()  # Replace with your desired timezone
+        # localized_datetime = utc_datetime.astimezone(desired_timezone)
+        print(request.user)
+        # print(localized_datetime)
+        user_response = {
+            "user": str(request.user.uuid),
+            "token_exp": request.auth['exp'],
+        }
+
+        return Response(user_response, status=status.HTTP_200_OK)
+        # except:
+        #     return Response({"user": None}, status=status.HTTP_401_UNAUTHORIZED)
