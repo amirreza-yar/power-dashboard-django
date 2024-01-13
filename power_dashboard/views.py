@@ -1,3 +1,4 @@
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from django.contrib.auth.models import Group
 from django.db.models.functions import TruncHour
@@ -125,6 +126,24 @@ class EnergyStatViewSet(viewsets.ModelViewSet):
         return JsonResponse(energy_data)
 
 
+def predictCost(energy):
+    cte = 5472
+    if energy < 200:
+        print(energy % 100, int(energy / 100))
+        if energy < 100:
+            return (energy % 100) * 0.14 * cte
+        return (100 * 0.14 + (energy % 100) * 0.163) * cte
+    elif 300 > energy > 200:
+        if energy < 200:
+            return (energy % 200) * 0.5*0.43 * cte
+        return (200 * 0.5*0.43 + (energy % 200) * 1.5) * cte
+    elif energy > 300:
+        initial = (200 * 0.5 + 100 * 1.5)
+        if energy < 500:
+            return (initial + (energy - 300) * 2.5) * cte
+        return (initial + 200*2.5 + (energy - 500) * 5) * cte
+
+
 class DailyStatViewSet(viewsets.ModelViewSet):
     queryset = PowerMeter.objects.all().order_by('datetime')
     serializer_class = DailyStatSerializer
@@ -142,7 +161,8 @@ class DailyStatViewSet(viewsets.ModelViewSet):
                 date_str, '%Y-%m-%d').date()
 
             # Filter records for the specific day
-            queryset = self.get_queryset().filter(datetime__date=input_date).filter(user=request.user)
+            queryset = self.get_queryset().filter(
+                datetime__date=input_date).filter(user=request.user)
 
             # Compute min and max power for the specific day
             min_power = queryset.aggregate(
@@ -189,6 +209,7 @@ class DailyStatViewSet(viewsets.ModelViewSet):
                     'max_power': max_power,
                     'avg_power': avg_power,
                     'energy': total_energy,
+                    'predicted_cost': round(predictCost(energy * 0.03)/10),
                     'user_uuid': str(request.user.uuid),
                     'powers': [{'power': entry['power'], 'hour': entry['hour'].strftime('%Y-%m-%dT%H:%M:%S')} for entry in hourly_powers]
                 }
@@ -354,14 +375,13 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
 
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 class ValidateJWTToken(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        
+
         refresh = RefreshToken.for_user(request.user)
         access_token = str(refresh.access_token)
 
