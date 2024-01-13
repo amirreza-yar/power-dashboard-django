@@ -209,7 +209,7 @@ class DailyStatViewSet(viewsets.ModelViewSet):
                     'max_power': max_power,
                     'avg_power': avg_power,
                     'energy': total_energy,
-                    'predicted_cost': round(predictCost(energy * 0.03)/10),
+                    'predicted_cost': round(predictCost(total_energy * 0.03)/10),
                     'user_uuid': str(request.user.uuid),
                     'powers': [{'power': entry['power'], 'hour': entry['hour'].strftime('%Y-%m-%dT%H:%M:%S')} for entry in hourly_powers]
                 }
